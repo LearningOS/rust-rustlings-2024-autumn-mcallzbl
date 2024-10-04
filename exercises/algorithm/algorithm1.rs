@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -23,19 +22,19 @@ impl<T> Node<T> {
     }
 }
 #[derive(Debug)]
-struct LinkedList<T> {
+struct LinkedList<T: std::cmp::PartialOrd> {
     length: u32,
     start: Option<NonNull<Node<T>>>,
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: std::cmp::PartialOrd+ Clone> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: std::cmp::PartialOrd + Clone> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -72,15 +71,37 @@ impl<T> LinkedList<T> {
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
 		//TODO
-		Self {
+		let mut res = Self {
             length: 0,
             start: None,
             end: None,
+        };
+        let mut cur_a = list_a.start.map(|ptr| unsafe { ptr.as_ptr() });
+        let mut cur_b = list_b.start.map(|ptr| unsafe { ptr.as_ptr() });
+
+        while let(Some(a), Some(b)) = (cur_a, cur_b){
+            unsafe{
+                if (*a).val <= (*b).val{
+                    cur_a = (*a).next.map(|ptr| ptr.as_ptr());
+                    res.add((*a).val.clone());
+                }else{
+                    cur_b = (*b).next.map(|ptr| ptr.as_ptr());
+                    res.add((*b).val.clone());
+                }
+            }
         }
+        let mut cur = if cur_a.is_some() {cur_a}else{cur_b};
+        while let Some(node_ptr) = cur{
+            unsafe{
+                res.add((*node_ptr).val.clone());
+                cur = (*node_ptr).next.map(|ptr| ptr.as_ptr());
+            }
+        }
+        res
 	}
 }
 
-impl<T> Display for LinkedList<T>
+impl<T: std::cmp::PartialOrd> Display for LinkedList<T>
 where
     T: Display,
 {
