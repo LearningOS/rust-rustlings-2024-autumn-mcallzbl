@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -20,6 +19,18 @@ impl<T> Heap<T>
 where
     T: Default,
 {
+    fn heapify_down(&mut self, mut idx: usize) {
+        while self.children_present(idx) {
+            let smallest_or_largest_child_idx = self.smallest_child_idx(idx);
+            if (self.comparator)(&self.items[smallest_or_largest_child_idx], &self.items[idx]) {
+                self.items.swap(idx, smallest_or_largest_child_idx);
+                idx = smallest_or_largest_child_idx;
+            } else {
+                break;
+            }
+        }
+    }
+
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
@@ -38,7 +49,23 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.heapify_up(self.count);
     }
+
+    fn heapify_up(&mut self, mut idx: usize) {
+    while idx > 1 {
+        let parent_idx = self.parent_idx(idx);
+        if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+            self.items.swap(idx, parent_idx);
+            idx = parent_idx;
+        } else {
+            break;
+        }
+    }
+}
+
 
     fn parent_idx(&self, idx: usize) -> usize {
         idx / 2
@@ -57,8 +84,18 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left_child = self.left_child_idx(idx);
+        let right_child = self.right_child_idx(idx);
+
+        if right_child > self.count {
+            left_child
+        } else {
+            if (self.comparator)(&self.items[left_child], &self.items[right_child]) {
+                left_child
+            } else {
+                right_child
+            }
+        }
     }
 }
 
@@ -83,10 +120,23 @@ where
 {
     type Item = T;
 
-    fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count == 0 {
+            None
+        } else {
+            let min_max = self.items.swap_remove(1);
+            self.count -= 1;
+            if !self.is_empty() {
+                let last = self.items.pop().unwrap();
+                self.items.insert(1, last);
+                self.heapify_down(1);
+            }
+            Some(min_max)
+        }
     }
+    
+
+    
 }
 
 pub struct MinHeap;
